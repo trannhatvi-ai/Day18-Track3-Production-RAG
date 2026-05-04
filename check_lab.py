@@ -54,22 +54,25 @@ def check_todos() -> int:
 def run_tests() -> tuple[int, int]:
     """Run pytest and return (passed, total)."""
     try:
+        import os
+        env = os.environ.copy()
+        env["PYTEST_DISABLE_PLUGIN_AUTOLOAD"] = "1"
         result = subprocess.run(
-            [sys.executable, "-m", "pytest", "tests/", "-v", "--tb=no", "-q"],
+            [sys.executable, "-m", "pytest", "tests/", "-q"],
             capture_output=True, text=True, timeout=120,
+            env=env
         )
-        lines = result.stdout.strip().split("\n")
-        summary = lines[-1] if lines else ""
-        # Parse "X passed, Y failed" or "X passed"
-        passed = total = 0
-        for part in summary.split(","):
-            part = part.strip()
-            if "passed" in part:
-                passed = int(part.split()[0])
-                total += passed
-            if "failed" in part:
-                total += int(part.split()[0])
-        return passed, total
+        output = result.stdout + result.stderr
+        # Look for "X passed" or "X passed, Y failed"
+        import re
+        match = re.search(r'(\d+)\s+passed', output)
+        if match:
+            passed = int(match.group(1))
+            # Try to find total (passed + failed)
+            fail_match = re.search(r'(\d+)\s+failed', output)
+            total = passed + (int(fail_match.group(1)) if fail_match else 0)
+            return passed, total
+        return 0, 0
     except Exception as e:
         print(f"  ⚠️  pytest error: {e}")
         return 0, 0
