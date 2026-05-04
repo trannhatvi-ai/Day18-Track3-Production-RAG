@@ -24,9 +24,11 @@ class CrossEncoderReranker:
     def _load_model(self):
         if self._model is None:
             try:
-                # Prefer sentence-transformers CrossEncoder (more compatible)
+                # Force CPU to avoid GPU memory issues
+                import os
+                os.environ["CUDA_VISIBLE_DEVICES"] = ""
                 from sentence_transformers import CrossEncoder
-                self._model = CrossEncoder(self.model_name)
+                self._model = CrossEncoder(self.model_name, device='cpu')
             except ImportError:
                 try:
                     from FlagEmbedding import FlagReranker

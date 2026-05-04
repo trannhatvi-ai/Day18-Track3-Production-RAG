@@ -251,8 +251,8 @@ def compare_strategies(documents: list[dict]) -> dict:
 
         results.setdefault("basic", []).extend(basic)
         results.setdefault("semantic", []).extend(semantic)
-        results.setdefault("hierarchical_parents", []).extend(hierarchical[0])
-        results.setdefault("hierarchical_children", []).extend(hierarchical[1])
+        # For hierarchical, we combine parents and children into one stats entry
+        results.setdefault("hierarchical", []).extend(hierarchical[0] + hierarchical[1])
         results.setdefault("structure", []).extend(structure)
 
     # Compute stats
@@ -274,7 +274,7 @@ def compare_strategies(documents: list[dict]) -> dict:
     print("-" * 60)
     print(f"{'Strategy':<25} {'Chunks':>8} {'Avg Len':>10} {'Min':>8} {'Max':>8}")
     print("-" * 60)
-    for key in ["basic", "semantic", "hierarchical_parents", "hierarchical_children", "structure"]:
+    for key in ["basic", "semantic", "hierarchical", "structure"]:
         s = stats.get(key, {})
         print(f"{key:<25} {s.get('num_chunks', 0):>8} {s.get('avg_length', 0):>10.0f} {s.get('min_length', 0):>8} {s.get('max_length', 0):>8}")
 

@@ -68,16 +68,30 @@ class DenseSearch:
     def _get_encoder(self):
         if self._encoder is None:
             from sentence_transformers import SentenceTransformer
-            self._encoder = SentenceTransformer(EMBEDDING_MODEL)
+            # Force CPU to avoid GPU memory issues
+            import os
+            os.environ["CUDA_VISIBLE_DEVICES"] = ""
+            self._encoder = SentenceTransformer(EMBEDDING_MODEL, device='cpu')
         return self._encoder
 
     def index(self, chunks: list[dict], collection: str = COLLECTION_NAME) -> None:
         """Index chunks into Qdrant."""
         from qdrant_client.models import Distance, VectorParams, PointStruct
-        self.client.recreate_collection(
-            collection_name=collection,
-            vectors_config=VectorParams(size=EMBEDDING_DIM, distance=Distance.COSINE)
-        )
+        try:
+            self.client.recreate_collection(
+                collection_name=collection,
+                vectors_config=VectorParams(size=EMBEDDING_DIM, distance=Distance.COSINE)
+            )
+        except Exception:
+            # Collection might already exist, try delete first
+            try:
+                self.client.delete_collection(collection_name=collection)
+            except Exception:
+                pass
+            self.client.recreate_collection(
+                collection_name=collection,
+                vectors_config=VectorParams(size=EMBEDDING_DIM, distance=Distance.COSINE)
+            )
         texts = [c["text"] for c in chunks]
         encoder = self._get_encoder()
         vectors = encoder.encode(texts, show_progress_bar=False)
@@ -93,13 +107,29 @@ class DenseSearch:
     def search(self, query: str, top_k: int = DENSE_TOP_K, collection: str = COLLECTION_NAME) -> list[SearchResult]:
         """Search using dense vectors."""
         query_vector = self._get_encoder().encode(query).tolist()
-        hits = self.client.search(collection_name=collection, query_vector=query_vector, limit=top_k)
+        try:
+            # Try new API (qdrant-client >= 1.8)
+            hits = self.client.query_points(
+                collection_name=collection,
+                query=query_vector,
+                limit=top_k,
+                with_payload=True,
+            ).points
+        except AttributeError:
+            # Fallback to old API
+            hits = self.client.search(
+                collection_name=collection,
+                query_vector=query_vector,
+                limit=top_k,
+                with_payload=True,
+            )
         results = []
         for hit in hits:
+            payload = hit.payload if hasattr(hit, 'payload') else hit.get('payload', {})
             results.append(SearchResult(
-                text=hit.payload.get("text", ""),
-                score=float(hit.score),
-                metadata={k: v for k, v in hit.payload.items() if k != "text"},
+                text=payload.get("text", ""),
+                score=float(hit.score) if hasattr(hit, 'score') else float(hit.get('score', 0)),
+                metadata={k: v for k, v in payload.items() if k != "text"},
                 method="dense"
             ))
         return results
