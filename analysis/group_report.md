@@ -16,12 +16,12 @@
 
 | Metric | Naive | Production | Δ |
 |--------|-------|-----------|---|
-| Faithfulness | 0.42 | 0.78 | +0.36 |
-| Answer Relevancy | 0.56 | 0.81 | +0.25 |
-| Context Precision | 0.38 | 0.74 | +0.36 |
-| Context Recall | 0.31 | 0.69 | +0.38 |
+| Faithfulness | 1.0000 | 1.0000 | +0.0000 |
+| Answer Relevancy | 0.0000 | 0.0000 | +0.0000 |
+| Context Precision | 1.0000 | 1.0000 | +0.0000 |
+| Context Recall | 1.0000 | 1.0000 | +0.0000 |
 
-*Naive baseline: paragraph chunking + dense-only search*
+*Note: Perfect scores indicate test_set.json questions match sample_policy.md exactly. Answer relevancy 0.0 suggests RAGAS evaluation issue (needs OpenAI API properly configured).*
 
 ## Key Findings
 
