@@ -1,3 +1,7 @@
 [
-  {"question": "hihi cả nhà tự tạo testset bằng cơm nhé", "ground_truth": "Không kịp tạo luôn"},
+  {"question": "Nhân viên được nghỉ phép bao nhiêu ngày?", "ground_truth": "12 ngày làm việc mỗi năm, tăng thêm 1 ngày mỗi 5 năm thâm niên"},
+  {"question": "Thời gian thử việc là bao lâu?", "ground_truth": "60 ngày"},
+  {"question": "Mật khẩu cần thay đổi bao lâu?", "ground_truth": "Mỗi 90 ngày"},
+  {"question": "Nhân viên có thể xin nghỉ phép không lương tối đa bao nhiêu ngày?", "ground_truth": "30 ngày mỗi năm"},
+  {"question": "Giấy xác nhận y tế cần nộp trong vòng bao lâu?", "ground_truth": "3 ngày làm việc"}
 ]
